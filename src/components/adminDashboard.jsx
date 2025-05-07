@@ -1,29 +1,39 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash } from "lucide-react";
+import { Plus, Pencil, Trash, Download  } from "lucide-react";
+import * as XLSX from "xlsx"; // 👈 Add this
+
 import AddForm from "./addForm.jsx";
 import Header from "./header.jsx";
 import PropertyCard from "./propertyCard.jsx";
 import { useAuth } from "./contextApi.jsx";
 import axios from "axios";
-import ShowProperty from "./showProperty.jsx";
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [formOpen, openForm] = useState(false);
   const [properties, setProperties] = useState([]);
-  const [selectedProperty, setSelectedProperty] = useState({});
   const [editedProperty, setEditedProperty] = useState({});
-  const navigator = useNavigate();
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
   let BACKAPI;
   if (import.meta.env.MODE === "development") {
     BACKAPI = import.meta.env.VITE_DEVELOPMENT_API;
   } else {
     BACKAPI = import.meta.env.VITE_PRODUCTION_API;
   }
+
+  // ✅ Excel download logic
+  const downloadExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(properties);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Properties");
+    XLSX.writeFile(workbook, "properties.xlsx");
+  };
+
   useEffect(() => {
     const verifyUser = async () => {
-      const token = localStorage.getItem("token");
       try {
         const res = await axios.get(`${BACKAPI}/api/auth/verify`, {
           headers: {
@@ -31,7 +41,7 @@ export default function AdminDashboard() {
           },
         });
         if (!res.data.success) {
-          navigator("/");
+          navigate("/");
         }
       } catch (err) {
         console.log(err);
@@ -39,8 +49,8 @@ export default function AdminDashboard() {
     };
     verifyUser();
   }, []);
+
   const fetchProperties = async () => {
-    const token = localStorage.getItem("token");
     try {
       const res = await axios.get(`${BACKAPI}/api/properties/get`, {
         headers: {
@@ -52,19 +62,18 @@ export default function AdminDashboard() {
       console.log(err);
     }
   };
+
   useEffect(() => {
     fetchProperties();
   }, []);
+
   const handleDelete = async (property) => {
-    console.log(property.images);
     try {
       const res = await axios.delete(
         `${BACKAPI}/api/properties/del/${property._id}`,
         {
           data: {
-            deletedImages: property.images
-              ? property.images.map((img) => img.public_id)
-              : [],
+            deletedImages: property.images?.map((img) => img.public_id) || [],
           },
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,18 +84,18 @@ export default function AdminDashboard() {
       if (res.data.success) {
         fetchProperties();
       } else {
-        console.log(
-          "error deleting this property " + property._id + res.data.message
-        );
+        console.log("error deleting this property " + res.data.message);
       }
     } catch (err) {
-      console.log("error deleting" + err);
+      console.log("error deleting: " + err);
     }
   };
+
   const handleEdit = (property) => {
     setEditedProperty(property);
     openForm(true);
   };
+
   return (
     <>
       <Header />
@@ -95,41 +104,40 @@ export default function AdminDashboard() {
           {user ? <h2>مرحباً, {user} 👋</h2> : null}
         </header>
 
+        {/* ✅ Download Button */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={downloadExcel}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow"
+          >
+            <Download className="w-5 h-5" />
+            تحميل كملف Excel
+          </button>
+        </div>
+
         <div className="flex flex-wrap justify-evenly mt-5 transition-opacity duration-1000 ease-in">
-          {properties?.length ? (
-            selectedProperty && Object.keys(selectedProperty).length > 0 ? (
-              <div className="w-full z-10 absolute top-0 right-0  p-5 bg-white">
-                <ShowProperty
-                  property={selectedProperty}
-                  setSelectedProperty={setSelectedProperty}
-                />
-              </div>
-            ) : (
-              properties.map((property, i) => (
-                <div key={property.creatorId + i} className="w-{320px} ml-2">
-                  <div className="absolute flex w-20 justify-evenly mr-2 mt-15">
-                    <div
-                      onClick={() => {
-                        handleDelete(property);
-                      }}
-                      className="h-9 grid place-content-center bg-red-700 hover:bg-red-500 transition-all w-9 rounded-full cursor-pointer"
-                    >
-                      <Trash className="text-white  " />
-                    </div>
-                    <div
-                      onClick={() => {
-                        handleEdit(property);
-                      }}
-                      className="h-9 grid place-content-center bg-yellow-400 hover:bg-yellow-300 transition-all mr-1 w-9 rounded-full cursor-pointer"
-                    >
-                      <Pencil className="text-white  " />
-                    </div>
-                  </div>
-                  <PropertyCard property={property} />
+          {properties.map((property) => (
+            <div
+              key={property.propertyId + property.area}
+              className="w-[320px] ml-2 relative"
+            >
+              <div className="absolute flex w-20 justify-evenly right-2 top-2 z-10">
+                <div
+                  onClick={() => handleDelete(property)}
+                  className="h-9 grid place-content-center bg-red-700 hover:bg-red-500 transition-all w-9 rounded-full cursor-pointer"
+                >
+                  <Trash className="text-white" />
                 </div>
-              ))
-            )
-          ) : null}
+                <div
+                  onClick={() => handleEdit(property)}
+                  className="h-9 grid place-content-center bg-yellow-400 hover:bg-yellow-300 transition-all w-9 rounded-full cursor-pointer"
+                >
+                  <Pencil className="text-white" />
+                </div>
+              </div>
+              <PropertyCard property={property} />
+            </div>
+          ))}
         </div>
 
         {formOpen && (

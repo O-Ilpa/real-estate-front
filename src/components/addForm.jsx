@@ -53,6 +53,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
 
       // Set images correctly from the 'images' field
       const existingImages = (editedProperty.images || []).map((img) => ({
+        url: img.url, // Corrected to use 'url' from 'images' field
         preview: img.url, // Corrected to use 'url' from 'images' field
         public_id: img.public_id,
         fromCloudinary: true,
@@ -502,7 +503,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
               <li key={file.public_id || file.name || i} className="relative">
                 <div className="relative h-[120px] w-[120px] shadow-gray-200 shadow-xl hover:shadow-md transition-all">
                   <Img
-                    src={file.preview || file.url} // Correctly handle the preview
+                    src={file.preview || file.url}
                     onLoad={() => {
                       if (file.preview) URL.revokeObjectURL(file.preview);
                     }}

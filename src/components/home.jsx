@@ -41,26 +41,17 @@ const Home = () => {
         <Filter />
       </main>
 
-      <div className="flex flex-wrap w-full justify-center gap-4 p-5">
-        {properties?.length ? (
-          selectedProperty && Object.keys(selectedProperty).length > 0 ? (
-            <div className="w-full z-40 absolute top-0 right-0  p-5 bg-white">
-              <ShowProperty
-                property={selectedProperty}
-                setSelectedProperty={setSelectedProperty}
-              />
-            </div>
-          ) : (
-            properties.map((property, i) => (
-              <div key={property.creatorId + i} className="w-{320px} ml-2">
+      <div className="flex flex-wrap w-full justify-center gap-4 p-5 ">
+
+            {properties.map((property) => (
+              <div key={property.area + " " + property.propertyId} className="w-{320px} ml-2">
                 <PropertyCard
                   onPropertyClick={() => setSelectedProperty(property)}
                   property={property}
                 />
               </div>
-            ))
-          )
-        ) : null}
+            ))}
+
       </div>
     </>
   );
