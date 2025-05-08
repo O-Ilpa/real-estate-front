@@ -24,6 +24,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
   const [notes, setNotes] = useState("");
   const [imagesUrl, setImagesUrl] = useState([]);
   const [deletedCloudinaryIds, setDeletedCloudinaryIds] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   let BACKAPI;
   if (import.meta.env.MODE === "development") {
@@ -34,13 +35,13 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
   useEffect(() => {
     if (Object.keys(editedProperty).length !== 0) {
       setPropertyId(editedProperty.propertyId || "");
-      setYearBuilt(editedProperty.yearBuilt || "");
+      setYearBuilt(editedProperty.yearBuilt || 0);
       setCategory(editedProperty.category || "");
       setType(editedProperty.type || "");
       setAgent(editedProperty.agent || "");
       setArea(editedProperty.area || "");
       setSize(editedProperty.size || "");
-      setFloor(editedProperty.floor || "");
+      setFloor(editedProperty.floor || 0);
       setIsLastFloor(editedProperty.isLastFloor || false);
       setPrice(editedProperty.price || "");
       setFinishing(editedProperty.finishing || "");
@@ -51,15 +52,14 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
       setElevators(editedProperty.elevators || "");
       setNotes(editedProperty.notes || "");
 
-      // Set images correctly from the 'images' field
       const existingImages = (editedProperty.images || []).map((img) => ({
-        url: img.url, // Corrected to use 'url' from 'images' field
-        preview: img.url, // Corrected to use 'url' from 'images' field
+        url: img.url,
+        preview: img.url,
         public_id: img.public_id,
         fromCloudinary: true,
       }));
 
-      setFiles(existingImages); // Set files state
+      setFiles(existingImages);
     }
   }, [editedProperty]);
 
@@ -104,15 +104,15 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
 
     try {
       const untouchedCloudinaryImages = files
-      .filter(
-        (file) =>
-          file.public_id && !deletedCloudinaryIds.includes(file.public_id)
-      )
-      .map((file) => ({
-        url: file.url,
-        public_id: file.public_id,
-        preview: file.preview || file.url,
-      }));
+        .filter(
+          (file) =>
+            file.public_id && !deletedCloudinaryIds.includes(file.public_id)
+        )
+        .map((file) => ({
+          url: file.url,
+          public_id: file.public_id,
+          preview: file.preview || file.url,
+        }));
 
       for (const file of files) {
         if (!file.public_id) {
@@ -132,7 +132,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
         const res = await axios.post(
           `${BACKAPI}/api/properties/add`,
           {
-            propertyId,
+            propertyId: propertyId.toLowerCase(),
             yearBuilt,
             category,
             type,
@@ -168,7 +168,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
         const res = await axios.put(
           `${BACKAPI}/api/properties/edit/${editedProperty._id}`,
           {
-            propertyId,
+            propertyId: propertyId.toLowerCase(),
             yearBuilt,
             category,
             type,
@@ -496,7 +496,7 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
           )}
         </div>
 
-        <h1 className="text-2xl mt-4 mb-2">الصور المقبولة</h1>
+        <h1 className="text-2xl mt-4 mb-5 text-center">الصور المقبولة</h1>
         <div className="min-h-[200px] overflow-y-scroll pr-1 no-scrollbar">
           <ul className="flex flex-wrap gap-3 items-center justify-center">
             {files.map((file, i) => (
@@ -541,12 +541,22 @@ const AddForm = ({ openForm, fetchProperties, editedProperty }) => {
         </div>
 
         <button
-          onClick={(e) => handleSubmit(e)}
-          type="submit"
-          className="bg-blue-600 cursor-pointer mb-0 text-white py-2 rounded-full hover:bg-blue-700 m-auto w-[70%]"
-        >
-          {Object.keys(editedProperty).length === 0 ? "إضافة العقار" : "تعديل"}
-        </button>
+  onClick={(e) => {
+    handleSubmit(e);
+    setLoading(true);
+  }}
+  type="submit"
+  className="bg-[var(--bg-main)] cursor-pointer mb-0 text-white py-2 rounded-full hover:bg-[#375963] m-auto w-[70%] flex justify-center items-center"
+>
+  {loading ? (
+    <div className="loader w-9 h-9 border-t-transparent"></div> 
+  ) : Object.keys(editedProperty).length === 0 ? (
+    "إضافة العقار"
+  ) : (
+    "تعديل"
+  )}
+</button>
+
       </form>
     </>
   );

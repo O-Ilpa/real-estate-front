@@ -40,11 +40,30 @@ const ShowProperty = () => {
   }, []);
 
   if (message !== "") {
-    return <div>{message}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-6xl font-extrabold text-gray-800 mb-4">
+            404 - Property Not Found
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">{message}</p>
+          <div
+            onClick={() => navigator("/")}
+            className="px-8 py-3 bg-[var(--bg-main)] hover:bg-[#375963] transition-all duration-200 rounded-full text-white font-semibold cursor-pointer"
+          >
+            Go Back to Home
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!property) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#ccc]">
+        <div className="loader w-12 h-12 border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
@@ -95,7 +114,28 @@ const ShowProperty = () => {
                 الريسيبشن: {property.reception}
               </p>
               <p className="text-gray-600">التشطيب: {property.finishing}</p>
-              <p className="text-gray-600">عدادات: {property.meters}</p>
+              <p className="text-gray-600">
+                عدادات:{" "}
+                {property.meters.map((meter, index) => {
+                  let arabicLabel = "";
+
+                  if (meter === "ك") {
+                    arabicLabel = "كهرباء"; 
+                  } else if (meter === "م") {
+                    arabicLabel = "مياه"; 
+                  } else if (meter === "غ") {
+                    arabicLabel = "غاز";
+                  }
+
+                  return (
+                    <span key={index}>
+                      {arabicLabel}
+                      {index !== property.meters.length - 1 && ", "}{" "}
+                    </span>
+                  );
+                })}
+              </p>
+
               <p className="text-gray-600">مصاعد: {property.elevators}</p>
             </div>
 
