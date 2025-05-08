@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import logoImgAvif from "../assets/logo.avif";
 
-// Icon imports as requested
+// Icons
 import FacebookIcon from "lucide-react/dist/esm/icons/facebook";
 import InstagramIcon from "lucide-react/dist/esm/icons/instagram";
 import LinkedinIcon from "lucide-react/dist/esm/icons/linkedin";
-import ChevronDownIcon from "lucide-react/dist/esm/icons/chevron-down";
-import UserRoundIcon from "lucide-react/dist/esm/icons/user-round";
-// Import WhatsApp icon from react-icons
-import { FaWhatsapp } from "react-icons/fa"; 
+import { FaWhatsapp } from "react-icons/fa";
+import { Moon, Sun } from "lucide-react"; // Icons
 
 import { useAuth } from "./contextApi";
 
@@ -17,24 +15,31 @@ const Header = ({ fetchProperties }) => {
   const token = localStorage.getItem("token");
   const { user, handleLogout } = useAuth();
   const [open, setOpen] = useState(false);
+
   const dropdownRef = useRef(null);
+  const triggerRef = useRef(null);
+  const location = useLocation();
+  const isAdminPage = location.pathname === "/admin/home";
 
-  const isAdminPage = window.location.pathname === "/admin/home";
-
-  // Close dropdown when clicking outside
+  // 💡 Click outside dropdown to close
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        !triggerRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+
   return (
-    <nav className="sticky z-40 top-0 bg-white h-16 flex justify-between items-center px-4 shadow">
+    <nav className="sticky z-40 top-0 bg-gradient-to-r from-white to-gray-100 dark:from-[#0f172a] dark:to-[#1e293b] h-16 flex justify-between items-center px-4 shadow">
       <picture>
         <source srcSet={logoImgAvif} type="image/avif" />
         <img
@@ -45,21 +50,27 @@ const Header = ({ fetchProperties }) => {
           className="w-32 h-32"
         />
       </picture>
+
       <div
-        onClick={() => setOpen(!open)}
-        className="flex flex-row-reverse px-3 py-2 ml-1 rounded-full bg-gray-100 justify-center items-center cursor-pointer hover:bg-gray-200 transition"
+        ref={triggerRef}
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center px-4 py-2 gap-2 bg-[var(--bg-main)] text-white rounded-full shadow cursor-pointer hover:bg-[#375963] transition"
       >
-        <ChevronDownIcon className="text-lg mr-0.5" />
-        <UserRoundIcon className="text-2xl" />
+        <span className="font-semibold text-sm hidden sm:inline">
+          {token ? user || "الحساب" : "تواصل معنا"}
+        </span>
+        <div className="h-8 w-8 rounded-full bg-white flex items-start justify-center text-[var(--bg-main)] font-bold">
+          {token ? user?.charAt(0).toUpperCase() : "?"}
+        </div>
       </div>
 
       <div
         ref={dropdownRef}
-        className={`absolute top-[101%] left-1 w-64 sm:w-72 bg-white p-4 rounded-xl shadow-lg z-50 transition-all duration-100 ease-in-out ${
+        className={`absolute top-[101%] left-1 w-64 sm:w-72 p-4 rounded-xl shadow-xl z-50 transition-all duration-150 ease-in-out ${
           open
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 -translate-y-5 pointer-events-none"
-        }`}
+        } bg-white dark:bg-slate-800 text-gray-800 dark:text-white`}
       >
         {token ? (
           <>
@@ -99,7 +110,8 @@ const Header = ({ fetchProperties }) => {
           </>
         )}
 
-        <div className="flex justify-evenly items-center mt-4 pt-4 border-t">
+        {/* 🔗 Social Links */}
+        <div className="flex justify-evenly items-center mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
           <a
             href="https://facebook.com/YOUR_PAGE"
             target="_blank"

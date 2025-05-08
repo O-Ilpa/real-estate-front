@@ -23,7 +23,7 @@ body {
   border-top: 4px solid var(--bg-main);
   border-radius: 50%;
 
-  animation: spin .5s ease-in  infinite;
+  animation: spin 1s ease-in  infinite;
 }
 
 @keyframes spin {
